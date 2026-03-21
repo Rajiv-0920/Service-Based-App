@@ -1,8 +1,12 @@
 import express from 'express';
-import * as controller from '../controllers/user.controller.js';
+import { Router } from 'express';
+import * as controller from '../controllers/user.controller.js'
+import { authenticate } from '../middleware/auth.js';
 
-const router = express.Router();
+const router = Router();
 
-router.post('/', controller.createUser);
+router.get('/profile', authenticate, controller.getUserProfile)
+
+router.put('/profile', authenticate, controller.updateUserProfile)
 
 export default router;
