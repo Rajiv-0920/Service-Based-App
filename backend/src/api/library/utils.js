@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
 
 export const generateToken = (res, userId) => {
-  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ _id: userId }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   });
 
-  res.cookie('jwt', token, {
+  res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV !== 'development',
     sameSite: 'strict',
@@ -13,4 +13,23 @@ export const generateToken = (res, userId) => {
   });
 
   return token;
+};
+
+/**
+ * @param {boolean} success - Status of the request
+ * @param {string} message - Human-readable message
+ * @param {object} data - The actual payload (user, token, etc.)
+ */
+export const sendResponse = (
+  res,
+  statusCode,
+  success,
+  message,
+  data = null,
+) => {
+  return res.status(statusCode).json({
+    success,
+    message,
+    data,
+  });
 };
