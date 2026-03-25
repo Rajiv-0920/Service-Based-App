@@ -1,5 +1,6 @@
 import { sendResponse } from '../library/utils.js';
 import Category from '../models/category.model.js';
+import Service from '../models/service.model.js';
 
 export const getCategories = async (req, res) => {
   try {
@@ -17,7 +18,22 @@ export const getCategories = async (req, res) => {
   }
 };
 
-export const getServicesByCategory = async (req, res) => {};
+export const getServicesByCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const services = await Service.find({ category: id });
+    return sendResponse(
+      res,
+      200,
+      true,
+      'Services retrieved successfully',
+      services,
+    );
+  } catch (error) {
+    console.log(`Error retrieving services by category: ${error}`);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 export const createCategory = async (req, res) => {
   try {
