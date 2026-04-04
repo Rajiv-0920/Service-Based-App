@@ -15,4 +15,6 @@ router.post('/logout', authenticate, controller.logout);
 
 router.get('/me', authenticate, controller.getMe);
 
+router.post('/google-login', controller.googleLogin);
+
 export default router;

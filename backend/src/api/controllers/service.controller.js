@@ -1,10 +1,20 @@
 import { sendResponse } from '../library/utils.js';
+import Category from '../models/category.model.js';
 import Service from '../models/service.model.js';
 
 export const getAllServices = async (req, res) => {
   try {
     // 1. Destructure all possible query parameters
-    const { q, category, city, sort, page = 1, limit = 10 } = req.query;
+    const {
+      q,
+      category,
+      minPrice,
+      maxPrice,
+      city,
+      sort,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
     // 2. Build a dynamic filter object
     let filter = { isActive: true }; // Only show active services by default
@@ -15,7 +25,16 @@ export const getAllServices = async (req, res) => {
     }
 
     if (category) {
-      filter.category = category; // Assumes category ID is passed
+      const cat = await Category.findOne({ slug: category });
+      filter.category = cat._id;
+    }
+
+    if (minPrice) {
+      filter.price = { $gte: parseInt(minPrice) };
+    }
+
+    if (maxPrice) {
+      filter.price = { ...filter.price, $lte: parseInt(maxPrice) };
     }
 
     if (city) {
@@ -55,12 +74,22 @@ export const getAllServices = async (req, res) => {
   }
 };
 
+export const getCities = async (req, res) => {
+  try {
+    const cities = await Service.distinct('city');
+    sendResponse(res, 200, true, 'Cities retrieved successfully', cities);
+  } catch (error) {
+    console.log(`Error in getCities: ${error.message}`);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 export const getServiceById = async (req, res) => {
   try {
     const serviceId = req.params.id;
     const service = await Service.findById(serviceId)
       .populate('business', 'businessName logo')
-      .populate('category', 'name');
+      .populate('category', 'name slug');
 
     if (!service) {
       return res
