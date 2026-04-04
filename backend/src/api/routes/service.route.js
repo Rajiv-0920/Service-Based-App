@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.get('/', controller.getAllServices);
 
+router.get('/cities', controller.getCities);
+
 router.get('/:id', controller.getServiceById);
 
 router.post('/', authenticate, isBusiness, controller.createService);
