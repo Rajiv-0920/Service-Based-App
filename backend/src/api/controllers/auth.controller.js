@@ -91,7 +91,7 @@ export const registerBusiness = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -102,7 +102,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = generateToken(res, user._id);
+    const token = generateToken(res, user._id, rememberMe);
     return sendResponse(res, 200, true, 'Login successful', {
       user: {
         id: user._id,
@@ -145,7 +145,7 @@ export const getMe = async (req, res) => {
 };
 
 export const googleLogin = async (req, res) => {
-  const { idToken } = req.body;
+  const { idToken, rememberMe } = req.body;
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
@@ -173,7 +173,7 @@ export const googleLogin = async (req, res) => {
 
     // 3. Generate App JWT
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '7d',
+      expiresIn: rememberMe ? '30d' : '1d',
     });
 
     // 4. Set Cookie
@@ -181,7 +181,7 @@ export const googleLogin = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 1 * 24 * 60 * 60 * 1000,
     });
 
     // 5. Return JSON (Crucial for RTK Query to "see" the token)
