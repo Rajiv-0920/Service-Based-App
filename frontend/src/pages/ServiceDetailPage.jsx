@@ -12,9 +12,11 @@ import { ServiceCard } from '@/components/ServiceCard';
 import { StarRating } from '@/components/serviceDetail/StarRating';
 import { BookingCard } from '@/components/serviceDetail/BookingCard';
 import { DetailSkeleton } from '@/components/serviceDetail/DetailSkeleton';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 export default function ServiceDetailPage() {
   const { id } = useParams();
+  useScrollToTop();
 
   const { data: serviceData, isLoading, isError } = useGetServiceByIdQuery(id);
   const service = serviceData?.data;

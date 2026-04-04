@@ -27,7 +27,9 @@ const RootLayout = () => {
         <Outlet />
       </main>
       <Footer />
-      <ScrollRestoration getKey={(location) => location.pathname} />
+      <ScrollRestoration
+        getKey={(location) => location.pathname + location.search}
+      />
     </div>
   );
 };

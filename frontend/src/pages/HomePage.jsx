@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router';
 import { ArrowRight, Sparkles, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   useGetServicesQuery,
   useGetCategoriesQuery,
@@ -25,7 +24,6 @@ const HomePage = () => {
   } = useGetServicesQuery({ limit: 8 });
   const { data: categoriesData = [] } = useGetCategoriesQuery();
 
-  // Normalize data safely
   const services = servicesResponse?.data ?? [];
   const categories = categoriesData?.data || [];
 
@@ -106,27 +104,45 @@ const HomePage = () => {
           <h2 className="text-lg font-semibold text-foreground mb-5">
             Browse by Category
           </h2>
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="flex-wrap h-auto gap-2 bg-transparent p-0">
-              <TabsTrigger
-                value="all"
-                onClick={() => navigate('/explore')}
-                className="rounded-full border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+
+          {/* Mobile: dropdown */}
+          <select
+            onChange={(e) =>
+              e.target.value === 'all'
+                ? navigate('/explore')
+                : handleCategory(e.target.value)
+            }
+            className="sm:hidden w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground"
+          >
+            <option value="all">All</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat.slug}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Desktop: horizontal scroll pills */}
+          <div
+            className="hidden sm:flex overflow-x-auto gap-2 pb-2 [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            <button
+              onClick={() => navigate('/explore')}
+              className="shrink-0 rounded-full border border-border bg-primary text-primary-foreground px-4 py-1.5 text-sm font-medium transition-colors"
+            >
+              All
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat._id}
+                onClick={() => handleCategory(cat.slug)}
+                className="shrink-0 rounded-full border border-border px-4 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-primary hover:text-primary-foreground transition-colors"
               >
-                All
-              </TabsTrigger>
-              {categories.map((cat) => (
-                <TabsTrigger
-                  key={cat._id}
-                  value={cat.name}
-                  onClick={() => handleCategory(cat.slug)}
-                  className="rounded-full border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  {cat.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+                {cat.name}
+              </button>
+            ))}
+          </div>
         </section>
       )}
 
