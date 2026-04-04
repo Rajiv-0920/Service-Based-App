@@ -18,8 +18,10 @@ export const authApi = createApi({
   tagTypes: ['AuthUser'],
   endpoints: (builder) => ({
     googleLogin: builder.mutation({
-      queryFn: async (_arg, _api, _extraOptions, baseQuery) => {
+      queryFn: async (arg, _api, _extraOptions, baseQuery) => {
         try {
+          const { rememberMe } = arg;
+
           // 1. Firebase Popup
           const provider = new GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
@@ -30,7 +32,7 @@ export const authApi = createApi({
           const response = await baseQuery({
             url: '/auth/google-login',
             method: 'POST',
-            body: { idToken },
+            body: { idToken, rememberMe },
           });
 
           if (response.error) return { error: response.error };

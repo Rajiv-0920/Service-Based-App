@@ -112,7 +112,7 @@ export default function SignInPage() {
 
   async function handleGoogleSignIn() {
     try {
-      const result = await googleLogin().unwrap();
+      const result = await googleLogin({ rememberMe }).unwrap();
       dispatch(setCredentials({ user: result.user, token: result.token }));
       navigate('/dashboard');
     } catch (err) {
@@ -123,7 +123,7 @@ export default function SignInPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await login({ email, password }).unwrap();
+      const result = await login({ email, password, rememberMe }).unwrap();
       dispatch(
         setCredentials({ user: result.data.user, token: result.data.token }),
       );
