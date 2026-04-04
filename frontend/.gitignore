@@ -3,7 +3,7 @@
 .env
 .env.local
 .env.*.local
-*.env
+*.env*
 # Ignore firebase config files if they contain secrets
 firebase-debug.log
 .firebaserc
