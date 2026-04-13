@@ -94,12 +94,12 @@ export const login = async (req, res) => {
     const { email, password, rememberMe } = req.body;
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
     const isPasswordCorrect = await user.comparePassword(password);
     if (!isPasswordCorrect) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
     const token = generateToken(res, user._id, rememberMe);
@@ -134,10 +134,14 @@ export const logout = (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
+    const business = await Business.findOne({ owner: req.user.id });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    return sendResponse(res, 200, true, 'User retrieved successfully', user);
+    return sendResponse(res, 200, true, 'User retrieved successfully', {
+      user,
+      business: business || null,
+    });
   } catch (error) {
     console.log(`Error in getMe controller: ${error.message}`);
     return res.status(500).json({ message: 'Server error' });
@@ -192,6 +196,7 @@ export const googleLogin = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {

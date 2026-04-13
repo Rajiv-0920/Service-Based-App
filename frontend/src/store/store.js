@@ -2,6 +2,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import { servicesApi } from '../services/servicesApi';
 import { authApi } from '../services/authApi';
 import authReducer from './authSlice';
+import { userApi } from '../services/userApi';
+import { businessApi } from '../services/businessApi';
+import { adminApi } from '../services/adminApi';
 
 // ---------------------------------------------------------------------------
 // Redux Store
@@ -13,15 +16,20 @@ import authReducer from './authSlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    // RTK Query cache reducer – MUST match the `reducerPath` on the api slice
     [servicesApi.reducerPath]: servicesApi.reducer,
-    [authApi.reducerPath]: authApi.reducer, // ← new
+    [userApi.reducerPath]: userApi.reducer,
+    [authApi.reducerPath]: authApi.reducer,
+    [businessApi.reducerPath]: businessApi.reducer,
+    [adminApi.reducerPath]: adminApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(servicesApi.middleware)
-      .concat(authApi.middleware),
+      .concat(userApi.middleware)
+      .concat(authApi.middleware)
+      .concat(businessApi.middleware)
+      .concat(adminApi.middleware),
 
   devTools: import.meta.env.DEV !== 'production',
 });

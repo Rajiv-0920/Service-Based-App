@@ -1,5 +1,7 @@
+import mongoose from 'mongoose';
 import { sendResponse } from '../library/utils.js';
 import Business from '../models/business.model.js';
+import Service from '../models/service.model.js';
 
 export const getBusinessProfile = async (req, res) => {
   try {
@@ -44,6 +46,52 @@ export const getPublicBusinessProfile = async (req, res) => {
     );
   } catch (error) {
     console.log(`Error in getPublicBusinessProfile: ${error.message}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const updateBusinessProfile = async (req, res) => {
+  try {
+    const id = req.business._id;
+    const business = await Business.findById(id);
+
+    if (!business) {
+      return sendResponse(res, 404, false, 'Business profile not found');
+    }
+
+    Object.assign(business, req.body);
+    await business.save();
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      'Business profile updated successfully',
+      business,
+    );
+  } catch (error) {
+    console.log(`Error in UpdateBusinessProfile: ${error.message}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const getBusinessServices = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const services = await Service.find({
+      business: id,
+    });
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      'Services retrieved successfully',
+      services,
+    );
+  } catch (error) {
+    console.log(`Error in getBusinessServices: ${error.message}`);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };

@@ -20,7 +20,7 @@ const serviceSchema = new mongoose.Schema(
     priceType: {
       type: String,
       required: true,
-      enum: ['fixed', 'hourly', 'starting_from'],
+      enum: ['fixed', 'hourly', 'per_session', 'per_day'],
     },
     images: [{ type: String }], // array of image URLs
     city: { type: String, required: true }, // Where service is available
@@ -32,6 +32,8 @@ const serviceSchema = new mongoose.Schema(
     avgRating: { type: Number, default: 0 },
     totalReviews: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    isListed: { type: Boolean, default: true },
+    duration: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

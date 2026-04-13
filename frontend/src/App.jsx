@@ -7,6 +7,14 @@ import SignInPage from './pages/SigninPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/protected/ProtectedRoute';
 import AuthLayout from './layout/AuthLayout';
+import SettingsPage from './pages/SettingPage';
+import RegisterPage from './pages/RegisterPage';
+import BusinessSetupPage from './pages/BusinessSetupPage';
+import BusinessProfilePage from './pages/BusinessProfilePage';
+import AdminPage from './pages/AdminPage';
+import { AdminGuard } from './components/protected/AdminGuard';
+import CreateServicePage from './pages/CreateServicePage';
+import ManageServicesPage from './pages/ManageServicePage';
 
 const router = createBrowserRouter([
   {
@@ -16,25 +24,36 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'explore', element: <ExplorePage /> },
       { path: 'services/:id', element: <ServiceDetailPage /> },
-
-      {
-        element: <AuthLayout />,
-        children: [
-          { path: 'login', element: <SignInPage /> },
-          // { path: 'sign-up', element: <SignUpPage /> },
-        ],
-      },
-
       {
         element: <ProtectedRoute />,
         children: [
           { path: 'profile', element: <ProfilePage /> },
-          // add more protected routes here
+          { path: 'settings', element: <SettingsPage /> },
         ],
       },
-
+      {
+        path: 'business',
+        element: <ProtectedRoute />,
+        children: [
+          { path: 'profile', element: <BusinessProfilePage /> },
+          { path: 'setup', element: <BusinessSetupPage /> },
+          { path: 'services/new', element: <CreateServicePage /> },
+          { path: 'services', element: <ManageServicesPage /> },
+        ],
+      },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
+  },
+  {
+    element: <AuthLayout />,
+    children: [
+      { path: 'login', element: <SignInPage /> },
+      { path: 'register', element: <RegisterPage /> },
+    ],
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [{ path: 'admin', element: <AdminPage /> }],
   },
 ]);
 

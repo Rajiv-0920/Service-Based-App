@@ -20,7 +20,7 @@ export default function ExplorePage() {
   const { filters, setFilters, clearFilters } = useFilters();
   const { data: fetchCategories } = useGetCategoriesQuery();
   const [localQuery, setLocalQuery] = useState(filters.q);
-  const categories = fetchCategories?.data;
+  const categories = fetchCategories;
 
   const handleSearch = (e) => {
     e.preventDefault();

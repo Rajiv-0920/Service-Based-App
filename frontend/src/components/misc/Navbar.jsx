@@ -9,6 +9,8 @@ import {
   User,
   Settings,
   ChevronDown,
+  Building2,
+  Clock,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -25,14 +27,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { clearCredentials, selectCurrentUser } from '../../store/authSlice';
+import {
+  clearCredentials,
+  selectCurrentBusiness,
+  selectCurrentUser,
+} from '../../store/authSlice';
 import { useLogoutMutation } from '../../services/authApi';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Returns up to 2 initials from a display name or email */
 function getInitials(user) {
   if (!user) return '?';
   if (user.name) {
@@ -46,24 +51,22 @@ function getInitials(user) {
   return (user.email?.[0] ?? '?').toUpperCase();
 }
 
-// ---------------------------------------------------------------------------
-// ProfileMenu — shown when user is logged in
-// ---------------------------------------------------------------------------
-function ProfileMenu({ user }) {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [logout] = useLogoutMutation();
-
-  const handleLogout = async () => {
-    try {
-      await logout().unwrap();
-    } finally {
-      // Always clear local state even if the server call fails
-      dispatch(clearCredentials());
-      localStorage.removeItem('token');
-      navigate('/login');
-    }
+function useBusinessState() {
+  const business = useSelector(selectCurrentBusiness);
+  return {
+    business,
+    hasNoBusiness: !business,
+    isPending: business && !business.isApproved && !business.isSuspended,
+    isApprovedBusiness: business?.isApproved,
   };
+}
+
+// ---------------------------------------------------------------------------
+// ProfileMenu — desktop dropdown
+// ---------------------------------------------------------------------------
+
+function ProfileMenu({ user, onLogout }) {
+  const { hasNoBusiness, isPending, isApprovedBusiness } = useBusinessState();
 
   return (
     <DropdownMenu>
@@ -87,7 +90,6 @@ function ProfileMenu({ user }) {
               {getInitials(user)}
             </AvatarFallback>
           </Avatar>
-          {/* Show name on md+ screens */}
           <span className="hidden md:block text-sm font-medium text-foreground max-w-[120px] truncate">
             {user?.name?.split(' ')[0] ?? user?.email}
           </span>
@@ -112,6 +114,7 @@ function ProfileMenu({ user }) {
 
         <DropdownMenuSeparator />
 
+        {/* Standard links */}
         <DropdownMenuItem asChild>
           <Link to="/profile" className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
@@ -128,8 +131,37 @@ function ProfileMenu({ user }) {
 
         <DropdownMenuSeparator />
 
+        {/* ── Business section ── */}
+        {hasNoBusiness && (
+          <DropdownMenuItem asChild>
+            <Link
+              to="/business/setup"
+              className="cursor-pointer"
+              style={{ color: 'hsl(var(--primary))' }}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Register Your Business
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        {(isPending || isApprovedBusiness) && (
+          <DropdownMenuItem asChild>
+            <Link
+              to="/business/profile"
+              className="cursor-pointer"
+              style={{ color: 'hsl(var(--primary))' }}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Business Profile
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        <DropdownMenuSeparator />
+
         <DropdownMenuItem
-          onClick={handleLogout}
+          onClick={onLogout}
           className="text-destructive focus:text-destructive cursor-pointer"
         >
           <LogOut className="mr-2 h-4 w-4" />
@@ -143,10 +175,16 @@ function ProfileMenu({ user }) {
 // ---------------------------------------------------------------------------
 // Navbar
 // ---------------------------------------------------------------------------
+
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useSelector(selectCurrentUser); // null = logged out
+  const dispatch = useDispatch();
+  const user = useSelector(selectCurrentUser);
+
+  const { hasNoBusiness, isPending, isApprovedBusiness } = useBusinessState();
+
+  const [logout] = useLogoutMutation();
 
   const searchFromUrl = new URLSearchParams(location.search).get('q') ?? '';
   const [query, setQuery] = useState(searchFromUrl);
@@ -163,6 +201,18 @@ const Navbar = () => {
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+    } catch (err) {
+      console.error('Logout failed', err);
+    } finally {
+      dispatch(clearCredentials());
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+  };
 
   function handleSearch(e) {
     e.preventDefault();
@@ -181,6 +231,7 @@ const Navbar = () => {
         scrolled && 'shadow-sm',
       )}
     >
+      {/* ── Desktop bar ── */}
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link
@@ -191,11 +242,11 @@ const Navbar = () => {
             <Sparkles className="h-4 w-4" />
           </div>
           <span className="hidden text-lg tracking-tight sm:block font-[family-name:var(--font-display)]">
-            Service Base App
+            Service Based App
           </span>
         </Link>
 
-        {/* Search bar (desktop) */}
+        {/* Search bar */}
         <form
           onSubmit={handleSearch}
           className="relative hidden flex-1 max-w-xl sm:flex items-center"
@@ -233,18 +284,16 @@ const Navbar = () => {
           </Button>
 
           {user ? (
-            // ── Logged in: avatar + dropdown ──
             <div className="ml-2">
-              <ProfileMenu user={user} />
+              <ProfileMenu user={user} onLogout={handleLogout} />
             </div>
           ) : (
-            // ── Logged out: sign in + CTA ──
             <>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">Sign in</Link>
               </Button>
-              <Button size="sm" className="ml-1" asChild>
-                <Link to="/register">List a Service</Link>
+              <Button size="sm" asChild>
+                <Link to="/register?intent=business">List your business</Link>
               </Button>
             </>
           )}
@@ -266,9 +315,10 @@ const Navbar = () => {
         </Button>
       </div>
 
-      {/* Mobile dropdown */}
+      {/* ── Mobile menu ── */}
       {mobileOpen && (
         <div className="border-t border-border/60 bg-background px-4 py-4 sm:hidden space-y-3">
+          {/* Mobile search */}
           <form onSubmit={handleSearch} className="relative flex items-center">
             <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -290,7 +340,7 @@ const Navbar = () => {
 
             {user ? (
               <>
-                {/* Mobile: show avatar + name inline */}
+                {/* User info row */}
                 <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted/50">
                   <Avatar className="h-8 w-8 border border-border">
                     <AvatarImage src={user?.avatar ?? user?.photoURL} />
@@ -316,22 +366,73 @@ const Navbar = () => {
                   </div>
                 </div>
 
+                {/* Standard links */}
                 <Button variant="ghost" className="justify-start" asChild>
                   <Link to="/profile" onClick={() => setMobileOpen(false)}>
                     <User className="mr-2 h-4 w-4" /> My Profile
                   </Link>
                 </Button>
+
                 <Button variant="ghost" className="justify-start" asChild>
                   <Link to="/settings" onClick={() => setMobileOpen(false)}>
                     <Settings className="mr-2 h-4 w-4" /> Settings
                   </Link>
                 </Button>
+
+                {/* ── Business section (mobile) ── */}
+                {hasNoBusiness && (
+                  <Button
+                    variant="ghost"
+                    className="justify-start text-primary"
+                    asChild
+                  >
+                    <Link
+                      to="/business/setup"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Building2 className="mr-2 h-4 w-4" />
+                      Register Your Business
+                    </Link>
+                  </Button>
+                )}
+
+                {isPending && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-amber-50 dark:bg-amber-950/30">
+                    <Clock className="h-4 w-4 text-amber-500 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                        Business pending
+                      </span>
+                      <span className="text-[10px] text-amber-700/70 dark:text-amber-400/70">
+                        Awaiting admin approval
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {isApprovedBusiness && (
+                  <Button
+                    variant="ghost"
+                    className="justify-start text-primary"
+                    asChild
+                  >
+                    <Link
+                      to="/business/profile"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Building2 className="mr-2 h-4 w-4" />
+                      Business Profile
+                    </Link>
+                  </Button>
+                )}
+
+                {/* Sign out */}
                 <Button
                   variant="ghost"
                   className="justify-start text-destructive hover:text-destructive"
-                  onClick={async () => {
-                    // reuse same logout logic
+                  onClick={() => {
                     setMobileOpen(false);
+                    handleLogout();
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" /> Sign out
@@ -344,9 +445,12 @@ const Navbar = () => {
                     Sign in
                   </Link>
                 </Button>
-                <Button className="mt-1" asChild>
-                  <Link to="/register" onClick={() => setMobileOpen(false)}>
-                    List a Service
+                <Button size="sm" className="ml-1" asChild>
+                  <Link
+                    to="/register?intent=business"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    List your business
                   </Link>
                 </Button>
               </>

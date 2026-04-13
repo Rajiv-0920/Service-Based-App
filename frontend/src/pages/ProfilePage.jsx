@@ -16,6 +16,7 @@ import {
   MapPin,
   Save,
   X,
+  CloudLightning,
 } from 'lucide-react';
 
 import {
@@ -37,6 +38,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useUpdateProfileMutation } from '../services/userApi';
 
 export default function ProfilePage() {
   const user = useSelector(selectCurrentUser);
@@ -44,7 +46,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
 
   const [logout] = useLogoutMutation();
-  // const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
   // Local state for editing
   const [isEditing, setIsEditing] = useState(false);
@@ -87,10 +89,11 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      const result = await updateProfile(formData).unwrap();
+      const user = await updateProfile(formData).unwrap();
+
       dispatch(
         setCredentials({
-          user: result.user,
+          user: user,
           token: localStorage.getItem('token'),
         }),
       );

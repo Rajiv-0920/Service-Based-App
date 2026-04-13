@@ -1,8 +1,20 @@
-// src/components/ProtectedRoute.jsx
+import { useSelector } from 'react-redux';
 import { Navigate, Outlet } from 'react-router';
+import { selectCurrentToken, selectCurrentUser } from '../../store/authSlice';
 
 export default function ProtectedRoute() {
-  const isAuthenticated = !!localStorage.getItem('token'); // or use your auth context/store
+  const tokenInStore = useSelector(selectCurrentToken);
+  const userInStore = useSelector(selectCurrentUser);
+  const tokenInStorage = localStorage.getItem('token');
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  const isAuthenticated = !!(tokenInStore || tokenInStorage);
+  const isAdmin = userInStore?.role === 'admin';
+
+  return isAdmin ? (
+    <Navigate to="/admin" replace />
+  ) : isAuthenticated ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" replace />
+  );
 }

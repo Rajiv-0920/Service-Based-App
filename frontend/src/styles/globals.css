@@ -166,3 +166,19 @@ html {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
 }
+
+button[role="switch"][data-state="checked"] {
+    background-color: hsl(var(--primary));
+}
+
+button[role="switch"][data-state="unchecked"] {
+    background-color: hsl(var(--input));
+}
+
+button[role="switch"][data-state="checked"] span {
+    --thumb-x: 22px;
+}
+
+button[role="switch"][data-state="unchecked"] span {
+    --thumb-x: 2px;
+}

@@ -13,8 +13,10 @@ router.get('/:id', controller.getServiceById);
 
 router.post('/', authenticate, isBusiness, controller.createService);
 
-router.put('/:id', controller.updateService);
+router.patch('/:id', authenticate, isBusiness, controller.updateService);
 
-router.delete('/:id', controller.deleteService);
+router.delete('/:id', authenticate, isBusiness, controller.deleteService);
+
+router.patch('/:id', authenticate, isBusiness, controller.updateServiceListing);
 
 export default router;

@@ -9,4 +9,8 @@ router.get('/profile', authenticate, controller.getUserProfile);
 
 router.put('/profile', authenticate, controller.updateUserProfile);
 
+router.put('/change-password', authenticate, controller.updateUserPassword);
+
+router.delete('/account', authenticate, controller.deleteUserAccount);
+
 export default router;

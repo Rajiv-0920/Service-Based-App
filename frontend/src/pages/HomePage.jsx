@@ -24,8 +24,8 @@ const HomePage = () => {
   } = useGetServicesQuery({ limit: 8 });
   const { data: categoriesData = [] } = useGetCategoriesQuery();
 
-  const services = servicesResponse?.data ?? [];
-  const categories = categoriesData?.data || [];
+  const services = servicesResponse?.data || [];
+  const categories = categoriesData || [];
 
   const handleCategory = (catName) => {
     navigate(`/explore?category=${encodeURIComponent(catName)}`);

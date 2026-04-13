@@ -1,14 +1,18 @@
 import { Outlet, ScrollRestoration } from 'react-router';
 import Navbar from '../components/misc/Navbar';
 import Footer from '../components/misc/Footer';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useGetMeQuery } from '../services/authApi';
 import { useEffect } from 'react';
-import { setCredentials, clearCredentials } from '../store/authSlice';
+import {
+  setCredentials,
+  clearCredentials,
+  selectCurrentToken,
+} from '../store/authSlice';
 
 const RootLayout = () => {
   const dispatch = useDispatch();
-  const token = localStorage.getItem('token');
+  const token = useSelector(selectCurrentToken); // ← reactive, updates on logout
 
   // Only fetch /me if a token exists in Redux (rehydrated from localStorage)
   const { data, error } = useGetMeQuery(undefined, {
@@ -16,7 +20,14 @@ const RootLayout = () => {
   });
 
   useEffect(() => {
-    if (data) dispatch(setCredentials({ user: data?.data, token }));
+    if (data)
+      dispatch(
+        setCredentials({
+          user: data.user,
+          business: data.business ?? null,
+          token,
+        }),
+      );
     if (error) dispatch(clearCredentials()); // token expired/invalid → log out
   }, [data, error, token, dispatch]);
 

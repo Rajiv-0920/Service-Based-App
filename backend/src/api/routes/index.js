@@ -5,6 +5,7 @@ import userRoutes from './user.route.js';
 import businessRoutes from './business.route.js';
 import serviceRoutes from './service.route.js';
 import categoryRoutes from './category.route.js';
+import adminRoutes from './admin.route.js';
 
 const router = Router();
 
@@ -17,5 +18,7 @@ router.use('/businesses', businessRoutes);
 router.use('/services', serviceRoutes);
 
 router.use('/categories', categoryRoutes);
+
+router.use('/admin', adminRoutes);
 
 export default router;

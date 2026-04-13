@@ -10,7 +10,7 @@ export const servicesApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_BASE_URL ?? '/api',
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       if (token) headers.set('Authorization', `Bearer ${token}`);
       return headers;
     },
@@ -36,6 +36,7 @@ export const servicesApi = createApi({
           limit: params.limit ?? 12,
         },
       }),
+      // transformResponse: (response) => response.data,
       providesTags: (result) =>
         result
           ? [
@@ -62,18 +63,84 @@ export const servicesApi = createApi({
     }),
 
     // -----------------------------------------------------------------------
+    // GET /business/:id/services
+    // -----------------------------------------------------------------------
+    getBusinessServices: builder.query({
+      query: (businessId) => `businesses/${businessId}/services`,
+      transformResponse: (response) => response.data,
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ _id }) => ({ type: 'Service', id: _id })),
+              { type: 'Service', id: 'BUSINESS-LIST' },
+            ]
+          : [{ type: 'Service', id: 'BUSINESS-LIST' }],
+    }),
+
+    // -----------------------------------------------------------------------
+    // POST /services  – create a new service
+    // -----------------------------------------------------------------------
+    createService: builder.mutation({
+      query: (service) => ({
+        url: 'services',
+        method: 'POST',
+        body: service,
+      }),
+      invalidatesTags: [{ type: 'Service', id: 'LIST' }],
+    }),
+
+    // -----------------------------------------------------------------------
     // GET /categories  – flat list used for nav + filters
     // -----------------------------------------------------------------------
     getCategories: builder.query({
       query: () => 'categories',
       providesTags: [{ type: 'Category', id: 'LIST' }],
+      transformResponse: (response) => response.data,
+    }),
+
+    toggleServiceListing: builder.mutation({
+      query: ({ id, isListed }) => ({
+        url: `services/${id}`,
+        method: 'PATCH',
+        body: { isListed },
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'Service', id },
+        { type: 'Service', id: 'BUSINESS-LIST' },
+      ],
+    }),
+
+    deleteService: builder.mutation({
+      query: (id) => ({ url: `services/${id}`, method: 'DELETE' }),
+      invalidatesTags: (_r, _e, id) => [
+        { type: 'Service', id },
+        { type: 'Service', id: 'BUSINESS-LIST' },
+        { type: 'Service', id: 'PARTIAL-LIST' },
+      ],
+    }),
+
+    updateService: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `services/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'Service', id: id },
+        { type: 'Service', id: 'BUSINESS-LIST' },
+      ],
     }),
   }),
 });
 
 export const {
   useGetServicesQuery,
-  useGetAvailableCitiesQuery, // New hook
+  useGetAvailableCitiesQuery,
   useGetServiceByIdQuery,
   useGetCategoriesQuery,
+  useCreateServiceMutation,
+  useToggleServiceListingMutation,
+  useDeleteServiceMutation,
+  useGetBusinessServicesQuery,
+  useUpdateServiceMutation,
 } = servicesApi;

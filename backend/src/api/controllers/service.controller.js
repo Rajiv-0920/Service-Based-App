@@ -17,7 +17,7 @@ export const getAllServices = async (req, res) => {
     } = req.query;
 
     // 2. Build a dynamic filter object
-    let filter = { isActive: true }; // Only show active services by default
+    let filter = { isActive: true, isListed: true }; // Only show active services by default
 
     if (q) {
       // Uses the text index you created in your schema
@@ -116,6 +116,7 @@ export const createService = async (req, res) => {
       city,
       availableDays,
       availableTime,
+      duration,
     } = req.body;
 
     const business = req.business._id;
@@ -139,6 +140,7 @@ export const createService = async (req, res) => {
       city,
       availableDays,
       availableTime,
+      duration,
     });
 
     // 3. Save to database
@@ -217,6 +219,39 @@ export const deleteService = async (req, res) => {
     sendResponse(res, 200, true, 'Service deleted successfully');
   } catch (error) {
     console.log(`Error in deleteService: ${error.message}`);
+    sendResponse(res, 500, false, 'Internal server error');
+  }
+};
+
+export const updateServiceListing = async (req, res) => {
+  try {
+    console.log(req.params);
+
+    const serviceId = req.params.id;
+
+    const { isListed } = req.body;
+
+    const service = await Service.findById(serviceId);
+
+    if (!service) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Service not found' });
+    }
+
+    service.isListed = isListed;
+    await service.save();
+    console.log(service);
+
+    sendResponse(
+      res,
+      200,
+      true,
+      'Service listing updated successfully',
+      service,
+    );
+  } catch (error) {
+    console.log(`Error in updateServiceListing: ${error.message}`);
     sendResponse(res, 500, false, 'Internal server error');
   }
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
 import {
   Eye,
@@ -10,6 +10,7 @@ import {
   Sparkles,
   Loader2,
   CloudLightning,
+  AlertTriangle,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 import { useLoginMutation, useGoogleLoginMutation } from '../services/authApi';
 import { setCredentials } from '../store/authSlice';
+import BackgroundDecor from '../components/misc/BackgroundDecor';
 
 // ── Icons ──
 const GoogleIcon = () => (
@@ -65,40 +67,11 @@ const FacebookIcon = () => (
   </svg>
 );
 
-const BackgroundDecor = () => (
-  <div
-    className="pointer-events-none fixed inset-0 overflow-hidden"
-    aria-hidden="true"
-  >
-    <div
-      className="absolute -top-32 -right-32 h-[480px] w-[480px] rounded-full opacity-[0.07]"
-      style={{
-        background:
-          'radial-gradient(circle at 40% 40%, hsl(196 72% 38%), hsl(196 72% 20%) 70%)',
-        filter: 'blur(60px)',
-      }}
-    />
-    <div
-      className="absolute -bottom-24 -left-24 h-[360px] w-[360px] rounded-full opacity-[0.06]"
-      style={{
-        background:
-          'radial-gradient(circle at 60% 60%, hsl(222 47% 30%), hsl(222 47% 10%) 70%)',
-        filter: 'blur(50px)',
-      }}
-    />
-    <div
-      className="absolute inset-0 opacity-[0.015]"
-      style={{
-        backgroundImage:
-          'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
-        backgroundSize: '48px 48px',
-      }}
-    />
-  </div>
-);
-
 export default function SignInPage() {
-  const [login, { isLoading: isEmailLoading }] = useLoginMutation();
+  const [
+    login,
+    { isLoading: isEmailLoading, error: loginError, isError: isLoginError },
+  ] = useLoginMutation();
   const [googleLogin, { isLoading: isGoogleLoading }] =
     useGoogleLoginMutation();
 
@@ -114,7 +87,12 @@ export default function SignInPage() {
     try {
       const result = await googleLogin({ rememberMe }).unwrap();
       dispatch(setCredentials({ user: result.user, token: result.token }));
-      navigate('/dashboard');
+
+      if (result.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       console.error('Google login failed', err);
     }
@@ -123,10 +101,13 @@ export default function SignInPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await login({ email, password, rememberMe }).unwrap();
-      dispatch(
-        setCredentials({ user: result.data.user, token: result.data.token }),
-      );
+      const data = await login({
+        email,
+        password,
+        rememberMe,
+      }).unwrap();
+
+      // dispatch(setCredentials({ user, business, token }));
       navigate('/dashboard');
     } catch (err) {
       console.error('Login failed', err);
@@ -151,6 +132,17 @@ export default function SignInPage() {
       <BackgroundDecor />
 
       <div className="relative z-10 w-full max-w-[440px]">
+        {/* Home link */}
+        <div className="mb-6 flex w-full justify-start">
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowRight className="h-3.5 w-3.5 rotate-180" />
+            Back to home
+          </Link>
+        </div>
+
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl shadow-lg bg-primary">
@@ -275,6 +267,13 @@ export default function SignInPage() {
               </Label>
             </div>
 
+            {isLoginError && (
+              <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>{loginError?.message}</span>
+              </div>
+            )}
+
             {/* Login Button */}
             <Button
               type="submit"
@@ -297,12 +296,12 @@ export default function SignInPage() {
         {/* Footer Link */}
         <p className="mt-5 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <a
-            href="/sign-up"
+          <Link
+            to="/register"
             className="text-primary font-semibold hover:opacity-75 transition-opacity"
           >
             Create one free
-          </a>
+          </Link>
         </p>
       </div>
     </div>
